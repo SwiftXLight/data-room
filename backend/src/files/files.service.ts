@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
@@ -107,7 +108,7 @@ export class FilesService {
         mimeType: dto.mimeType,
         sizeBytes: BigInt(size),
         status: "PENDING",
-        storageKey: "pending",
+        storageKey: `pending-${randomUUID()}`,
       },
       select: {
         id: true,
