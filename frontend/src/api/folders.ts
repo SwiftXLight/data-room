@@ -1,19 +1,10 @@
 import api from "../api/client";
+import { FileItem } from "./files";
 
 export interface Folder {
   id: string;
   name: string;
   parentId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FileItem {
-  id: string;
-  name: string;
-  sizeBytes: bigint;
-  mimeType: string;
-  status: string;
   createdAt: string;
   updatedAt: string;
 }

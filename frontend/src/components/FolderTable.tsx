@@ -1,10 +1,8 @@
-import { Folder, FileItem } from "../api/folders";
-import {
-  Folder as FolderIcon,
-  FileText,
-  FolderOpen,
-} from "lucide-react";
+import { Folder } from "../api/folders";
+import { FileItem } from "../api/files";
+import { Folder as FolderIcon, FileText, FolderOpen } from "lucide-react";
 import { FolderActionsMenu } from "./FolderActionsMenu";
+import { FileActionsMenu } from "./FileActionsMenu";
 
 interface FolderTableProps {
   folders: Folder[];
@@ -12,14 +10,19 @@ interface FolderTableProps {
   onFolderClick: (folderId: string) => void;
   onRenameFolder?: (folder: Folder) => void;
   onDeleteFolder?: (folder: Folder) => void;
+  onRenameFile?: (file: FileItem) => Promise<void> | void;
+  onDeleteFile?: (file: FileItem) => Promise<void> | void;
+  onPreviewFile?: (file: FileItem) => void;
+  onMoveFile?: (file: FileItem) => void;
 }
 
-function formatBytes(bytes: bigint): string {
-  if (bytes === 0n) return "0 B";
+function formatBytes(bytes: string): string {
+  if (!bytes || bytes === "0") return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(Number(bytes)) / Math.log(k));
-  return `${parseFloat((Number(bytes) / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  const num = Number(bytes);
+  const i = Math.floor(Math.log(num) / Math.log(k));
+  return `${parseFloat((num / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 export function FolderTable({
@@ -28,6 +31,10 @@ export function FolderTable({
   onFolderClick,
   onRenameFolder,
   onDeleteFolder,
+  onRenameFile,
+  onDeleteFile,
+  onPreviewFile,
+  onMoveFile,
 }: FolderTableProps) {
   if (folders.length === 0 && files.length === 0) {
     return (
@@ -51,9 +58,12 @@ export function FolderTable({
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Size</th>
             <th className="px-4 py-3 font-medium">Modified</th>
-            {(onRenameFolder || onDeleteFolder) && (
-              <th className="w-10 px-4 py-3" />
-            )}
+            {(onRenameFolder ||
+              onDeleteFolder ||
+              onRenameFile ||
+              onDeleteFile ||
+              onPreviewFile ||
+              onMoveFile) && <th className="w-10 px-4 py-3" />}
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800">
@@ -104,6 +114,25 @@ export function FolderTable({
               <td className="px-4 py-3 text-zinc-500">
                 {new Date(file.updatedAt).toLocaleDateString()}
               </td>
+              {(onRenameFile ||
+                onDeleteFile ||
+                onPreviewFile ||
+                onMoveFile) && (
+                <td className="px-4 py-3">
+                  {(onRenameFile ||
+                    onDeleteFile ||
+                    onPreviewFile ||
+                    onMoveFile) && (
+                    <FileActionsMenu
+                      file={file}
+                      onPreview={() => onPreviewFile?.(file)}
+                      onRename={() => onRenameFile?.(file)}
+                      onDelete={() => onDeleteFile?.(file)}
+                      onMove={() => onMoveFile?.(file)}
+                    />
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

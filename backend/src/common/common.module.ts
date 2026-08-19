@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { AuthorizationService } from './authorization.service';
+import { Module } from "@nestjs/common";
+import { AuthorizationService } from "./authorization.service";
 
 @Module({
   providers: [AuthorizationService],

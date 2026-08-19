@@ -34,7 +34,7 @@ export interface FolderContentsResponse {
   files: {
     id: string;
     name: string;
-    sizeBytes: bigint;
+    sizeBytes: string;
     mimeType: string;
     status: string;
     createdAt: string;
@@ -135,7 +135,7 @@ export class FoldersService {
       })),
       files: files.slice(0, resolvedLimit).map((f) => ({
         ...f,
-        sizeBytes: f.sizeBytes,
+        sizeBytes: f.sizeBytes.toString(),
         createdAt: f.createdAt.toISOString(),
         updatedAt: f.updatedAt.toISOString(),
       })),

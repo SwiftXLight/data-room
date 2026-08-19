@@ -1,16 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  MoreVertical,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  FolderOpen,
+} from "lucide-react";
+import { FileItem } from "../api/files";
 
-interface FolderActionsMenuProps {
+interface FileActionsMenuProps {
+  file: FileItem;
   onRename: () => void;
   onDelete: () => void;
+  onPreview: () => void;
+  onMove: () => void;
 }
 
-export function FolderActionsMenu({
+export function FileActionsMenu({
   onRename,
   onDelete,
-}: FolderActionsMenuProps) {
+  onPreview,
+  onMove,
+}: FileActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -54,6 +66,16 @@ export function FolderActionsMenu({
     onDelete();
   };
 
+  const handlePreview = () => {
+    setIsOpen(false);
+    onPreview();
+  };
+
+  const handleMove = () => {
+    setIsOpen(false);
+    onMove();
+  };
+
   return (
     <div className="relative">
       <button
@@ -77,6 +99,20 @@ export function FolderActionsMenu({
               left: buttonRef.current?.getBoundingClientRect().right ?? 0,
             }}
           >
+            <button
+              onClick={handlePreview}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Preview
+            </button>
+            <button
+              onClick={handleMove}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+            >
+              <FolderOpen className="h-4 w-4" />
+              Move
+            </button>
             <button
               onClick={handleRename}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"

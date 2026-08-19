@@ -12,6 +12,10 @@ import { FolderTable } from "../components/FolderTable";
 import { CreateFolderDialog } from "../components/CreateFolderDialog";
 import { RenameFolderDialog } from "../components/RenameFolderDialog";
 import { DeleteFolderDialog } from "../components/DeleteFolderDialog";
+import { FileUploadZone } from "../components/FileUploadZone";
+import { RenameFileDialog } from "../components/RenameFileDialog";
+import { DeleteFileDialog } from "../components/DeleteFileDialog";
+import { MoveFileDialog } from "../components/MoveFileDialog";
 import { roomsApi, RoomDetail } from "../api/rooms";
 import {
   foldersApi,
@@ -19,7 +23,9 @@ import {
   FolderContentsResponse,
   CreateFolderResponse,
 } from "../api/folders";
+import { filesApi, FileItem, RenameFileResponse } from "../api/files";
 import { ApiError } from "../api/client";
+import { FilePreviewDialog } from "../components/FilePreviewDialog";
 
 export function RoomView() {
   const { roomId, folderId } = useParams();
@@ -33,6 +39,11 @@ export function RoomView() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [renamingFolder, setRenamingFolder] = useState<Folder | null>(null);
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
+
+  const [renamingFile, setRenamingFile] = useState<FileItem | null>(null);
+  const [deletingFile, setDeletingFile] = useState<FileItem | null>(null);
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [movingFile, setMovingFile] = useState<FileItem | null>(null);
 
   const currentFolderId = folderId || room?.rootFolderId || "";
 
@@ -71,7 +82,9 @@ export function RoomView() {
     }
   }, [room, roomId, loadContents]);
 
-  const handleCreateFolder = async (name: string): Promise<CreateFolderResponse> => {
+  const handleCreateFolder = async (
+    name: string,
+  ): Promise<CreateFolderResponse> => {
     if (!currentFolderId) throw new Error("No folder selected");
     const created = await foldersApi.create(currentFolderId, name);
     loadContents();
@@ -81,7 +94,15 @@ export function RoomView() {
   const handleRenameFolder = async (name: string): Promise<Folder> => {
     if (!renamingFolder) throw new Error("No folder selected");
     const updated = await foldersApi.rename(renamingFolder.id, name);
-    loadContents();
+    setContents((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        folders: prev.folders.map((f) =>
+          f.id === updated.id ? { ...f, name: updated.name } : f,
+        ),
+      };
+    });
     return updated;
   };
 
@@ -101,6 +122,55 @@ export function RoomView() {
     } else {
       loadContents();
     }
+  };
+
+  const handleRenameFile = async (
+    name: string,
+  ): Promise<RenameFileResponse> => {
+    if (!renamingFile) throw new Error("No file selected");
+    const updated = await filesApi.rename(renamingFile.id, name);
+    setContents((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        files: prev.files.map((f) =>
+          f.id === updated.id ? { ...f, name: updated.name } : f,
+        ),
+      };
+    });
+    return updated;
+  };
+
+  const handleDeleteFile = async (): Promise<void> => {
+    if (!deletingFile) return;
+    await filesApi.delete(deletingFile.id);
+    setContents((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        files: prev.files.filter((f) => f.id !== deletingFile.id),
+      };
+    });
+  };
+
+  const handleMoveFile = async (destinationFolderId: string): Promise<void> => {
+    if (!movingFile) return;
+    await filesApi.move(movingFile.id, destinationFolderId);
+    loadContents();
+  };
+
+  const handlePreviewFile = async (file: FileItem) => {
+    try {
+      await filesApi.getViewUrl(file.id);
+      setPreviewFile({ ...file });
+    } catch (err) {
+      const apiErr = err as ApiError;
+      alert(apiErr.message || "Failed to load file preview.");
+    }
+  };
+
+  const handleUploadComplete = () => {
+    loadContents();
   };
 
   const navigateToFolder = (folderId: string) => {
@@ -173,12 +243,21 @@ export function RoomView() {
               </button>
             </div>
 
+            <FileUploadZone
+              folderId={currentFolderId}
+              onUploadComplete={handleUploadComplete}
+            />
+
             <FolderTable
               folders={contents.folders}
               files={contents.files}
               onFolderClick={navigateToFolder}
               onRenameFolder={(folder) => setRenamingFolder(folder)}
               onDeleteFolder={(folder) => setDeletingFolder(folder)}
+              onRenameFile={(file) => setRenamingFile(file)}
+              onDeleteFile={(file) => setDeletingFile(file)}
+              onPreviewFile={handlePreviewFile}
+              onMoveFile={(file) => setMovingFile(file)}
             />
           </div>
         )}
@@ -203,6 +282,35 @@ export function RoomView() {
         onConfirm={handleDeleteFolder}
         folder={deletingFolder}
       />
+
+      <RenameFileDialog
+        isOpen={!!renamingFile}
+        onClose={() => setRenamingFile(null)}
+        onSubmit={handleRenameFile}
+        initialName={renamingFile?.name || ""}
+      />
+
+      <DeleteFileDialog
+        isOpen={!!deletingFile}
+        onClose={() => setDeletingFile(null)}
+        onConfirm={handleDeleteFile}
+        file={deletingFile}
+      />
+
+      <MoveFileDialog
+        isOpen={!!movingFile}
+        onClose={() => setMovingFile(null)}
+        onConfirm={handleMoveFile}
+        file={movingFile}
+        currentFolderId={currentFolderId}
+      />
+
+      {previewFile && (
+        <FilePreviewDialog
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   );
 }
