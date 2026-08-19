@@ -61,6 +61,17 @@ export function PublicSharePage() {
     }
   };
 
+  const handlePreviewFileShare = async () => {
+    if (!token || !share?.file) return;
+    try {
+      const data = await publicApi.getFile(token);
+      setPreviewFile({ id: share.file.id, name: share.file.name, url: data.url });
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.message || "Failed to load file preview.");
+    }
+  };
+
   useEffect(() => {
     loadShare();
   }, [loadShare]);
@@ -141,7 +152,7 @@ export function PublicSharePage() {
               {(Number(share.file.sizeBytes) / 1024 / 1024).toFixed(1)} MB
             </p>
             <button
-              onClick={() => setPreviewFile({ id: share.file!.id, name: share.file!.name, url: "" })}
+              onClick={handlePreviewFileShare}
               className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-500"
             >
               View File
