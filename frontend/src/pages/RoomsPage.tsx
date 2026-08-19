@@ -78,6 +78,7 @@ export function RoomsPage() {
 
   const handleShareCreated = () => {
     setSharingRoomId(null);
+    loadRoomShares();
   };
 
   const handleToggleShares = async () => {
@@ -90,6 +91,17 @@ export function RoomsPage() {
   };
 
   const sharingRoom = rooms.find((r) => r.id === sharingRoomId) || null;
+
+  const sharedRoomIds = new Set(
+    roomShares
+      .filter(
+        (s) =>
+          s.resourceType === "DATA_ROOM" &&
+          s.resourceId &&
+          !s.revokedAt,
+      )
+      .map((s) => s.resourceId),
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -171,7 +183,14 @@ export function RoomsPage() {
                       <FolderOpen className="h-5 w-5 text-indigo-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-zinc-100 truncate">{room.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-zinc-100 truncate">{room.name}</p>
+                        {sharedRoomIds.has(room.id) && (
+                          <span className="shrink-0 rounded border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                            Shared
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-zinc-500">
                         Created {new Date(room.createdAt).toLocaleDateString()}
                       </p>
