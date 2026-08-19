@@ -6,6 +6,7 @@ import {
   Trash2,
   ExternalLink,
   FolderOpen,
+  Share2,
 } from "lucide-react";
 import { FileItem } from "../api/files";
 
@@ -15,6 +16,8 @@ interface FileActionsMenuProps {
   onDelete: () => void;
   onPreview: () => void;
   onMove: () => void;
+  onShare?: () => void;
+  canShare?: boolean;
 }
 
 export function FileActionsMenu({
@@ -22,6 +25,8 @@ export function FileActionsMenu({
   onDelete,
   onPreview,
   onMove,
+  onShare,
+  canShare,
 }: FileActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -76,6 +81,11 @@ export function FileActionsMenu({
     onMove();
   };
 
+  const handleShare = () => {
+    setIsOpen(false);
+    onShare?.();
+  };
+
   return (
     <div className="relative">
       <button
@@ -99,6 +109,15 @@ export function FileActionsMenu({
               left: buttonRef.current?.getBoundingClientRect().right ?? 0,
             }}
           >
+            {onShare && canShare && (
+              <button
+                onClick={handleShare}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+            )}
             <button
               onClick={handlePreview}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"

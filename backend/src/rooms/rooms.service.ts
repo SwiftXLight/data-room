@@ -29,7 +29,7 @@ export class RoomsService {
       },
     });
 
-    const shared = await this.prisma.share.findMany({
+    const directRoomShares = await this.prisma.share.findMany({
       where: {
         recipientUserId: userId,
         accessType: "PRIVATE",
@@ -39,9 +39,47 @@ export class RoomsService {
       select: { resourceId: true },
     });
 
-    const sharedRoomIds = shared.map((s) => s.resourceId);
+    const folderAndFileShares = await this.prisma.share.findMany({
+      where: {
+        recipientUserId: userId,
+        accessType: "PRIVATE",
+        revokedAt: null,
+        resourceType: { in: ["FOLDER", "FILE"] },
+      },
+      select: { resourceType: true, resourceId: true },
+    });
+
+    const folderIds = folderAndFileShares
+      .filter((s) => s.resourceType === "FOLDER")
+      .map((s) => s.resourceId);
+
+    const fileIds = folderAndFileShares
+      .filter((s) => s.resourceType === "FILE")
+      .map((s) => s.resourceId);
+
+    const folders = await this.prisma.folder.findMany({
+      where: { id: { in: folderIds } },
+      select: { dataRoomId: true },
+    });
+
+    const files = await this.prisma.file.findMany({
+      where: { id: { in: fileIds } },
+      select: { folder: { select: { dataRoomId: true } } },
+    });
+
+    const sharedRoomIdsFromFolders = folders.map((f) => f.dataRoomId);
+    const sharedRoomIdsFromFiles = files
+      .filter((f) => f.folder)
+      .map((f) => f.folder.dataRoomId);
+
+    const allSharedRoomIds = new Set([
+      ...directRoomShares.map((s) => s.resourceId),
+      ...sharedRoomIdsFromFolders,
+      ...sharedRoomIdsFromFiles,
+    ]);
+
     const accessible = await this.prisma.dataRoom.findMany({
-      where: { id: { in: sharedRoomIds } },
+      where: { id: { in: Array.from(allSharedRoomIds) } },
       select: {
         id: true,
         name: true,

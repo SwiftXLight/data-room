@@ -1,15 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Share2 } from "lucide-react";
 
 interface FolderActionsMenuProps {
   onRename: () => void;
   onDelete: () => void;
+  onShare?: () => void;
+  canShare?: boolean;
 }
 
 export function FolderActionsMenu({
   onRename,
   onDelete,
+  onShare,
+  canShare,
 }: FolderActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -54,6 +58,11 @@ export function FolderActionsMenu({
     onDelete();
   };
 
+  const handleShare = () => {
+    setIsOpen(false);
+    onShare?.();
+  };
+
   return (
     <div className="relative">
       <button
@@ -77,6 +86,15 @@ export function FolderActionsMenu({
               left: buttonRef.current?.getBoundingClientRect().right ?? 0,
             }}
           >
+            {onShare && canShare && (
+              <button
+                onClick={handleShare}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+            )}
             <button
               onClick={handleRename}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"

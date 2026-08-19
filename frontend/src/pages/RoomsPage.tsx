@@ -1,19 +1,23 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, FolderOpen, LogOut, Loader2 } from "lucide-react";
+import { Plus, FolderOpen, Loader2, Share2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { roomsApi, Room } from "../api/rooms";
 import { ApiError } from "../api/client";
+import { AppHeader } from "../components/AppHeader";
+import { ShareDialog } from "../components/ShareDialog";
 
 export function RoomsPage() {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const [sharingRoomId, setSharingRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRooms();
@@ -54,43 +58,15 @@ export function RoomsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
+  const handleShareCreated = () => {
+    setSharingRoomId(null);
   };
+
+  const sharingRoom = rooms.find((r) => r.id === sharingRoomId) || null;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <header className="border-b border-zinc-800 px-6 py-4 flex justify-between items-center bg-zinc-900/30">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/20 ring-1 ring-indigo-500/30">
-            <svg
-              className="h-4 w-4 text-indigo-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"
-              />
-            </svg>
-          </div>
-          <span className="font-bold tracking-tight">Data Room</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-400">{user?.email}</span>
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800 flex items-center gap-2"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </button>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="mb-8">
@@ -153,28 +129,54 @@ export function RoomsPage() {
           </div>
         ) : (
           <div className="grid gap-3">
-            {rooms.map((room) => (
-              <Link
-                key={room.id}
-                to={`/rooms/${room.id}`}
-                className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-all hover:border-indigo-500/30 hover:bg-zinc-800/40"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-indigo-600/10 p-2">
-                    <FolderOpen className="h-5 w-5 text-indigo-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-zinc-100">{room.name}</p>
-                    <p className="text-xs text-zinc-500">
-                      Created {new Date(room.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
+            {rooms.map((room) => {
+              const isOwner = user?.id === room.ownerId;
+              return (
+                <div
+                  key={room.id}
+                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-all hover:border-indigo-500/30 hover:bg-zinc-800/40"
+                >
+                  <Link
+                    to={`/rooms/${room.id}`}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <div className="rounded-lg bg-indigo-600/10 p-2">
+                      <FolderOpen className="h-5 w-5 text-indigo-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-zinc-100 truncate">{room.name}</p>
+                      <p className="text-xs text-zinc-500">
+                        Created {new Date(room.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+                  {isOwner && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSharingRoomId(room.id);
+                      }}
+                      className="shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800 flex items-center gap-1.5 ml-3"
+                    >
+                      <Share2 className="h-3.5 w-3.5" />
+                      Share
+                    </button>
+                  )}
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
+
+      <ShareDialog
+        isOpen={!!sharingRoomId}
+        onClose={() => setSharingRoomId(null)}
+        resourceType="DATA_ROOM"
+        resourceId={sharingRoomId || ""}
+        resourceName={sharingRoom?.name || ""}
+        onShareCreated={handleShareCreated}
+      />
     </div>
   );
 }

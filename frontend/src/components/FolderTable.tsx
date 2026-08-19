@@ -10,10 +10,14 @@ interface FolderTableProps {
   onFolderClick: (folderId: string) => void;
   onRenameFolder?: (folder: Folder) => void;
   onDeleteFolder?: (folder: Folder) => void;
+  onShareFolder?: (folder: Folder) => void;
+  canShareFolder?: boolean;
   onRenameFile?: (file: FileItem) => Promise<void> | void;
   onDeleteFile?: (file: FileItem) => Promise<void> | void;
   onPreviewFile?: (file: FileItem) => void;
   onMoveFile?: (file: FileItem) => void;
+  onShareFile?: (file: FileItem) => void;
+  canShareFile?: boolean;
 }
 
 function formatBytes(bytes: string): string {
@@ -31,10 +35,14 @@ export function FolderTable({
   onFolderClick,
   onRenameFolder,
   onDeleteFolder,
+  onShareFolder,
+  canShareFolder,
   onRenameFile,
   onDeleteFile,
   onPreviewFile,
   onMoveFile,
+  onShareFile,
+  canShareFile,
 }: FolderTableProps) {
   if (folders.length === 0 && files.length === 0) {
     return (
@@ -60,10 +68,12 @@ export function FolderTable({
             <th className="px-4 py-3 font-medium">Modified</th>
             {(onRenameFolder ||
               onDeleteFolder ||
+              onShareFolder ||
               onRenameFile ||
               onDeleteFile ||
               onPreviewFile ||
-              onMoveFile) && <th className="w-10 px-4 py-3" />}
+              onMoveFile ||
+              onShareFile) && <th className="w-10 px-4 py-3" />}
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800">
@@ -85,14 +95,14 @@ export function FolderTable({
               <td className="px-4 py-3 text-zinc-500">
                 {new Date(folder.updatedAt).toLocaleDateString()}
               </td>
-              {(onRenameFolder || onDeleteFolder) && (
+              {(onRenameFolder || onDeleteFolder || onShareFolder) && (
                 <td className="px-4 py-3">
-                  {(onRenameFolder || onDeleteFolder) && (
-                    <FolderActionsMenu
-                      onRename={() => onRenameFolder?.(folder)}
-                      onDelete={() => onDeleteFolder?.(folder)}
-                    />
-                  )}
+                  <FolderActionsMenu
+                    onRename={() => onRenameFolder?.(folder)}
+                    onDelete={() => onDeleteFolder?.(folder)}
+                    onShare={() => onShareFolder?.(folder)}
+                    canShare={canShareFolder}
+                  />
                 </td>
               )}
             </tr>
@@ -117,20 +127,18 @@ export function FolderTable({
               {(onRenameFile ||
                 onDeleteFile ||
                 onPreviewFile ||
-                onMoveFile) && (
+                onMoveFile ||
+                onShareFile) && (
                 <td className="px-4 py-3">
-                  {(onRenameFile ||
-                    onDeleteFile ||
-                    onPreviewFile ||
-                    onMoveFile) && (
-                    <FileActionsMenu
-                      file={file}
-                      onPreview={() => onPreviewFile?.(file)}
-                      onRename={() => onRenameFile?.(file)}
-                      onDelete={() => onDeleteFile?.(file)}
-                      onMove={() => onMoveFile?.(file)}
-                    />
-                  )}
+                  <FileActionsMenu
+                    file={file}
+                    onPreview={() => onPreviewFile?.(file)}
+                    onRename={() => onRenameFile?.(file)}
+                    onDelete={() => onDeleteFile?.(file)}
+                    onMove={() => onMoveFile?.(file)}
+                    onShare={() => onShareFile?.(file)}
+                    canShare={canShareFile}
+                  />
                 </td>
               )}
             </tr>

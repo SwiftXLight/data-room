@@ -81,6 +81,7 @@ model Share {
   accessType      String
   role            String
   tokenHash       String?
+  publicUrl       String?
   createdAt       DateTime  @default(now())
   revokedAt       DateTime?
 

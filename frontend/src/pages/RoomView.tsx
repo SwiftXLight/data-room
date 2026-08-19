@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus,
-  FolderOpen,
-  ChevronRight,
+  Share2,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
@@ -26,10 +25,16 @@ import {
 import { filesApi, FileItem, RenameFileResponse } from "../api/files";
 import { ApiError } from "../api/client";
 import { FilePreviewDialog } from "../components/FilePreviewDialog";
+import { ShareDialog } from "../components/ShareDialog";
+import { SharesList } from "../components/SharesList";
+import { AppHeader } from "../components/AppHeader";
+import { sharesApi, Share } from "../api/shares";
+import { useAuth } from "../hooks/useAuth";
 
 export function RoomView() {
   const { roomId, folderId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [room, setRoom] = useState<RoomDetail | null>(null);
   const [contents, setContents] = useState<FolderContentsResponse | null>(null);
@@ -45,7 +50,15 @@ export function RoomView() {
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [movingFile, setMovingFile] = useState<FileItem | null>(null);
 
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [shares, setShares] = useState<Share[]>([]);
+  const [showShares, setShowShares] = useState(false);
+
+  const [sharingFolder, setSharingFolder] = useState<Folder | null>(null);
+  const [sharingFile, setSharingFile] = useState<FileItem | null>(null);
+
   const currentFolderId = folderId || room?.rootFolderId || "";
+  const isOwner = user?.id === room?.ownerId;
 
   const loadRoom = useCallback(async () => {
     if (!roomId) return;
@@ -72,6 +85,16 @@ export function RoomView() {
     }
   }, [currentFolderId]);
 
+  const loadShares = useCallback(async () => {
+    if (!roomId) return;
+    try {
+      const data = await sharesApi.listForRoom(roomId);
+      setShares(data);
+    } catch (err) {
+      console.error("Failed to load shares:", err);
+    }
+  }, [roomId]);
+
   useEffect(() => {
     loadRoom();
   }, [loadRoom]);
@@ -81,6 +104,12 @@ export function RoomView() {
       loadContents();
     }
   }, [room, roomId, loadContents]);
+
+  useEffect(() => {
+    if (room && roomId) {
+      loadShares();
+    }
+  }, [room, roomId, loadShares]);
 
   const handleCreateFolder = async (
     name: string,
@@ -173,6 +202,27 @@ export function RoomView() {
     loadContents();
   };
 
+  const handleShareCreated = () => {
+    loadShares();
+  };
+
+  const handleRevokeShare = async (shareId: string): Promise<void> => {
+    await sharesApi.revoke(shareId);
+    setShares((prev) => prev.filter((s) => s.id !== shareId));
+  };
+
+  const handleShareFolder = (folder: Folder) => {
+    setSharingFolder(folder);
+    setSharingFile(null);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShareFile = (file: FileItem) => {
+    setSharingFile(file);
+    setSharingFolder(null);
+    setIsShareDialogOpen(true);
+  };
+
   const navigateToFolder = (folderId: string) => {
     if (roomId) {
       navigate(`/rooms/${roomId}/folders/${folderId}`);
@@ -198,25 +248,30 @@ export function RoomView() {
     );
   }
 
+  const isRoot = currentFolderId === room?.rootFolderId;
+  const dialogResourceType = sharingFolder
+    ? "FOLDER"
+    : sharingFile
+      ? "FILE"
+      : isRoot
+        ? "DATA_ROOM"
+        : "FOLDER";
+  const dialogResourceId = sharingFolder
+    ? sharingFolder.id
+    : sharingFile
+      ? sharingFile.id
+      : isRoot
+        ? roomId!
+        : currentFolderId;
+  const dialogResourceName = sharingFolder
+    ? sharingFolder.name
+    : sharingFile
+      ? sharingFile.name
+      : room?.name || contents?.folder.name || "";
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
-      <header className="border-b border-zinc-800 px-6 py-4 flex justify-between items-center bg-zinc-900/30">
-        <div className="flex items-center gap-4">
-          <Link
-            to="/rooms"
-            className="flex items-center gap-2 hover:text-indigo-400 transition-colors"
-          >
-            <FolderOpen className="h-5 w-5" />
-            <span className="font-bold tracking-tight">Data Room</span>
-          </Link>
-          {room && (
-            <>
-              <ChevronRight className="h-4 w-4 text-zinc-600" />
-              <span className="text-sm text-zinc-300">{room.name}</span>
-            </>
-          )}
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 mx-auto max-w-5xl w-full px-6 py-8">
         {error && (
@@ -254,11 +309,32 @@ export function RoomView() {
               onFolderClick={navigateToFolder}
               onRenameFolder={(folder) => setRenamingFolder(folder)}
               onDeleteFolder={(folder) => setDeletingFolder(folder)}
+              onShareFolder={handleShareFolder}
+              canShareFolder={isOwner}
               onRenameFile={(file) => setRenamingFile(file)}
               onDeleteFile={(file) => setDeletingFile(file)}
               onPreviewFile={handlePreviewFile}
               onMoveFile={(file) => setMovingFile(file)}
+              onShareFile={handleShareFile}
+              canShareFile={isOwner}
             />
+
+            {isOwner && (
+              <div className="border-t border-zinc-800 pt-6">
+                <button
+                  onClick={() => setShowShares(!showShares)}
+                  className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  {showShares ? "Hide" : "Show"} shares ({shares.length})
+                </button>
+                {showShares && (
+                  <div className="mt-4">
+                    <SharesList shares={shares} onRevoke={handleRevokeShare} canRevoke={isOwner} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -309,6 +385,21 @@ export function RoomView() {
         <FilePreviewDialog
           file={previewFile}
           onClose={() => setPreviewFile(null)}
+        />
+      )}
+
+      {isOwner && (
+        <ShareDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => {
+            setIsShareDialogOpen(false);
+            setSharingFolder(null);
+            setSharingFile(null);
+          }}
+          resourceType={dialogResourceType}
+          resourceId={dialogResourceId}
+          resourceName={dialogResourceName}
+          onShareCreated={handleShareCreated}
         />
       )}
     </div>
