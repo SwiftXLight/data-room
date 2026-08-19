@@ -23,12 +23,6 @@ class ApiClient {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
       localStorage.removeItem("accessToken");
-      if (
-        !window.location.pathname.startsWith("/login") &&
-        !window.location.pathname.startsWith("/register")
-      ) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-      }
       const errBody = await response.json().catch(() => ({}));
       throw {
         code: errBody.code || "AUTH_TOKEN_INVALID",
