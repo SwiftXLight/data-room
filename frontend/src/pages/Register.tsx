@@ -1,38 +1,42 @@
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { ApiError } from '../api/client';
+import { useState, FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { ApiError } from "../api/client";
 
 export function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = (): boolean => {
     const errs: typeof fieldErrors = {};
 
     if (!email) {
-      errs.email = 'Email is required.';
+      errs.email = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errs.email = 'Please enter a valid email address.';
+      errs.email = "Please enter a valid email address.";
     }
 
     if (!password) {
-      errs.password = 'Password is required.';
+      errs.password = "Password is required.";
     } else if (password.length < 8) {
-      errs.password = 'Password must be at least 8 characters.';
+      errs.password = "Password must be at least 8 characters.";
     }
 
     if (!confirmPassword) {
-      errs.confirmPassword = 'Please confirm your password.';
+      errs.confirmPassword = "Please confirm your password.";
     } else if (password !== confirmPassword) {
-      errs.confirmPassword = 'Passwords do not match.';
+      errs.confirmPassword = "Passwords do not match.";
     }
 
     setFieldErrors(errs);
@@ -48,18 +52,22 @@ export function Register() {
     setIsSubmitting(true);
     try {
       await register(email, password);
-      navigate('/rooms', { replace: true });
+      navigate("/rooms", { replace: true });
     } catch (err) {
       const apiErr = err as ApiError;
-      if (apiErr.code === 'AUTH_EMAIL_ALREADY_EXISTS') {
-        setFieldErrors((prev) => ({ ...prev, email: 'An account with this email already exists.' }));
-      } else if (apiErr.code === 'VALIDATION_ERROR' && apiErr.details) {
+      if (apiErr.code === "AUTH_EMAIL_ALREADY_EXISTS") {
+        setFieldErrors((prev) => ({
+          ...prev,
+          email: "An account with this email already exists.",
+        }));
+      } else if (apiErr.code === "VALIDATION_ERROR" && apiErr.details) {
         const errs: typeof fieldErrors = {};
-        if (apiErr.details['email']) errs.email = apiErr.details['email'];
-        if (apiErr.details['password']) errs.password = apiErr.details['password'];
+        if (apiErr.details["email"]) errs.email = apiErr.details["email"];
+        if (apiErr.details["password"])
+          errs.password = apiErr.details["password"];
         setFieldErrors(errs);
       } else {
-        setError(apiErr.message || 'Something went wrong. Please try again.');
+        setError(apiErr.message || "Something went wrong. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -78,25 +86,54 @@ export function Register() {
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600/20 ring-1 ring-indigo-500/30">
-            <svg className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+            <svg
+              className="h-6 w-6 text-indigo-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"
+              />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-50">Create your account</h1>
-          <p className="mt-1 text-sm text-zinc-400">Start organizing your documents securely</p>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
+            Create your account
+          </h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Start organizing your documents securely
+          </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm">
-          <form id="register-form" onSubmit={handleSubmit} noValidate className="space-y-5">
+          <form
+            id="register-form"
+            onSubmit={handleSubmit}
+            noValidate
+            className="space-y-5"
+          >
             {/* Global error banner */}
             {error && (
               <div
                 role="alert"
                 className="flex items-start gap-3 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400"
               >
-                <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                <svg
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                  />
                 </svg>
                 {error}
               </div>
@@ -104,7 +141,10 @@ export function Register() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="register-email" className="block text-sm font-medium text-zinc-300">
+              <label
+                htmlFor="register-email"
+                className="block text-sm font-medium text-zinc-300"
+              >
                 Email address
               </label>
               <input
@@ -120,8 +160,8 @@ export function Register() {
                 placeholder="john@example.com"
                 className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all focus:ring-2 ${
                   fieldErrors.email
-                    ? 'border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20'
+                    ? "border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20"
                 }`}
               />
               {fieldErrors.email && (
@@ -131,7 +171,10 @@ export function Register() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label htmlFor="register-password" className="block text-sm font-medium text-zinc-300">
+              <label
+                htmlFor="register-password"
+                className="block text-sm font-medium text-zinc-300"
+              >
                 Password
               </label>
               <input
@@ -147,8 +190,8 @@ export function Register() {
                 placeholder="Min. 8 characters"
                 className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all focus:ring-2 ${
                   fieldErrors.password
-                    ? 'border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20'
+                    ? "border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20"
                 }`}
               />
               {fieldErrors.password && (
@@ -158,7 +201,10 @@ export function Register() {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label htmlFor="register-confirm-password" className="block text-sm font-medium text-zinc-300">
+              <label
+                htmlFor="register-confirm-password"
+                className="block text-sm font-medium text-zinc-300"
+              >
                 Confirm password
               </label>
               <input
@@ -169,17 +215,22 @@ export function Register() {
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
-                  setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: undefined,
+                  }));
                 }}
                 placeholder="••••••••"
                 className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all focus:ring-2 ${
                   fieldErrors.confirmPassword
-                    ? 'border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20'
+                    ? "border-red-500 bg-red-950/20 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-zinc-700 bg-zinc-800/60 focus:border-indigo-500 focus:ring-indigo-500/20"
                 }`}
               />
               {fieldErrors.confirmPassword && (
-                <p className="text-xs text-red-400">{fieldErrors.confirmPassword}</p>
+                <p className="text-xs text-red-400">
+                  {fieldErrors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -192,14 +243,29 @@ export function Register() {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
                   </svg>
                   Creating account…
                 </span>
               ) : (
-                'Create account'
+                "Create account"
               )}
             </button>
           </form>
@@ -207,7 +273,7 @@ export function Register() {
 
         {/* Footer link */}
         <p className="mt-6 text-center text-sm text-zinc-500">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link
             to="/login"
             id="register-login-link"

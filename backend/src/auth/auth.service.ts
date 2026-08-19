@@ -1,9 +1,13 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
+import { PrismaService } from "../prisma/prisma.service";
+import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
 
 const BCRYPT_ROUNDS = 10;
 
@@ -21,8 +25,8 @@ export class AuthService {
 
     if (existing) {
       throw new ConflictException({
-        code: 'AUTH_EMAIL_ALREADY_EXISTS',
-        message: 'An account with this email already exists.',
+        code: "AUTH_EMAIL_ALREADY_EXISTS",
+        message: "An account with this email already exists.",
       });
     }
 
@@ -36,7 +40,10 @@ export class AuthService {
       select: { id: true, email: true },
     });
 
-    const accessToken = this.jwtService.sign({ sub: user.id, email: user.email });
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+    });
 
     return { user, accessToken };
   }
@@ -48,8 +55,8 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException({
-        code: 'AUTH_INVALID_CREDENTIALS',
-        message: 'Invalid email or password.',
+        code: "AUTH_INVALID_CREDENTIALS",
+        message: "Invalid email or password.",
       });
     }
 
@@ -57,12 +64,15 @@ export class AuthService {
 
     if (!passwordValid) {
       throw new UnauthorizedException({
-        code: 'AUTH_INVALID_CREDENTIALS',
-        message: 'Invalid email or password.',
+        code: "AUTH_INVALID_CREDENTIALS",
+        message: "Invalid email or password.",
       });
     }
 
-    const accessToken = this.jwtService.sign({ sub: user.id, email: user.email });
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+    });
 
     return {
       user: { id: user.id, email: user.email },
@@ -78,8 +88,8 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException({
-        code: 'AUTH_TOKEN_INVALID',
-        message: 'User not found.',
+        code: "AUTH_TOKEN_INVALID",
+        message: "User not found.",
       });
     }
 

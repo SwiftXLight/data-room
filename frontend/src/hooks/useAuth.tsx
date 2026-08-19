@@ -5,10 +5,10 @@ import {
   useEffect,
   useCallback,
   ReactNode,
-} from 'react';
-import { authApi, AuthUser } from '../api/auth';
+} from "react";
+import { authApi, AuthUser } from "../api/auth";
 
-const TOKEN_KEY = 'accessToken';
+const TOKEN_KEY = "accessToken";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -77,6 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
   return ctx;
 }

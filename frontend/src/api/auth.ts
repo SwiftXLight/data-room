@@ -1,4 +1,4 @@
-import api from './client';
+import api from "./client";
 
 export interface AuthUser {
   id: string;
@@ -12,11 +12,10 @@ export interface AuthResponse {
 
 export const authApi = {
   register: (email: string, password: string): Promise<AuthResponse> =>
-    api.post<AuthResponse>('/auth/register', { email, password }),
+    api.post<AuthResponse>("/auth/register", { email, password }),
 
   login: (email: string, password: string): Promise<AuthResponse> =>
-    api.post<AuthResponse>('/auth/login', { email, password }),
+    api.post<AuthResponse>("/auth/login", { email, password }),
 
-  me: (): Promise<AuthUser> =>
-    api.get<AuthUser>('/auth/me'),
+  me: (): Promise<AuthUser> => api.get<AuthUser>("/auth/me"),
 };
