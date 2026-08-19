@@ -6,6 +6,8 @@ A full-stack Data Room MVP for securely storing, organizing, viewing, and sharin
 
 **Live:** https://data-room-uupw.onrender.com (frontend), https://data-room-backend-wy1w.onrender.com (backend)
 
+Health check: `GET https://data-room-backend-wy1w.onrender.com/health` → `{ "status": "ok" }`
+
 ---
 
 ## Features
