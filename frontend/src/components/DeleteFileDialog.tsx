@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertTriangle } from "lucide-react";
 import { FileItem } from "../api/files";
+import { useToast } from "../hooks/useToast";
 
 interface DeleteFileDialogProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function DeleteFileDialog({
 }: DeleteFileDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -33,6 +35,7 @@ export function DeleteFileDialog({
     setError(null);
     try {
       await onConfirm();
+      addToast("File deleted successfully", "success");
       onClose();
     } catch (err: any) {
       const apiErr = err as { message?: string };

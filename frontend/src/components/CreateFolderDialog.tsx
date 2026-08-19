@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { CreateFolderResponse } from "../api/folders";
+import { useToast } from "../hooks/useToast";
 
 interface CreateFolderDialogProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function CreateFolderDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -43,6 +45,7 @@ export function CreateFolderDialog({
     setIsSubmitting(true);
     try {
       await onSubmit(trimmed);
+      addToast("Folder created successfully", "success");
       onClose();
     } catch (err: any) {
       const apiErr = err as { code?: string; message?: string };

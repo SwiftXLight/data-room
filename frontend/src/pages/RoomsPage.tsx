@@ -6,6 +6,8 @@ import { roomsApi, Room } from "../api/rooms";
 import { ApiError } from "../api/client";
 import { AppHeader } from "../components/AppHeader";
 import { ShareDialog } from "../components/ShareDialog";
+import { SharesList } from "../components/SharesList";
+import { sharesApi, Share } from "../api/shares";
 
 export function RoomsPage() {
   const navigate = useNavigate();
@@ -18,9 +20,13 @@ export function RoomsPage() {
   const [createError, setCreateError] = useState<string | null>(null);
 
   const [sharingRoomId, setSharingRoomId] = useState<string | null>(null);
+  const [showShares, setShowShares] = useState(false);
+  const [roomShares, setRoomShares] = useState<Share[]>([]);
+  const [isLoadingShares, setIsLoadingShares] = useState(true);
 
   useEffect(() => {
     loadRooms();
+    loadRoomShares();
   }, []);
 
   const loadRooms = async () => {
@@ -34,6 +40,18 @@ export function RoomsPage() {
       setError(apiErr.message || "Failed to load rooms.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadRoomShares = async () => {
+    setIsLoadingShares(true);
+    try {
+      const data = await sharesApi.listRoomShares();
+      setRoomShares(data);
+    } catch (err) {
+      console.error("Failed to load room shares:", err);
+    } finally {
+      setIsLoadingShares(false);
     }
   };
 
@@ -60,6 +78,15 @@ export function RoomsPage() {
 
   const handleShareCreated = () => {
     setSharingRoomId(null);
+  };
+
+  const handleToggleShares = async () => {
+    setShowShares((prev) => !prev);
+  };
+
+  const handleRevokeShare = async (shareId: string) => {
+    await sharesApi.revoke(shareId);
+    setRoomShares((prev) => prev.filter((s) => s.id !== shareId));
   };
 
   const sharingRoom = rooms.find((r) => r.id === sharingRoomId) || null;
@@ -167,6 +194,31 @@ export function RoomsPage() {
             })}
           </div>
         )}
+
+        <div className="border-t border-zinc-800 pt-6">
+          <button
+            onClick={handleToggleShares}
+            className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            {showShares ? "Hide" : "Show"} shares ({roomShares.length})
+          </button>
+          {showShares && (
+            <div className="mt-4">
+              {isLoadingShares ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                </div>
+              ) : roomShares.length === 0 ? (
+                <p className="text-sm text-zinc-500 text-center py-4">
+                  No active room shares
+                </p>
+              ) : (
+                <SharesList shares={roomShares} onRevoke={handleRevokeShare} canRevoke={true} />
+              )}
+            </div>
+          )}
+        </div>
       </main>
 
       <ShareDialog

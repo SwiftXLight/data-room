@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { ToastProvider } from "./hooks/useToast";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -15,7 +16,8 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ToastProvider>
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -58,6 +60,7 @@ const App = () => {
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+      </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

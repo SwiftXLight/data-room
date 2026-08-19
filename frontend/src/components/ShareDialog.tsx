@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Copy, Check, Share2, UserPlus, Link as LinkIcon } from "lucide-react";
 import { sharesApi, CreateShareRequest, CreateShareResponse } from "../api/shares";
+import { useToast } from "../hooks/useToast";
 
 interface ShareDialogProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function ShareDialog({
   resourceName,
   onShareCreated,
 }: ShareDialogProps) {
+  const { addToast } = useToast();
   const [accessType, setAccessType] = useState<"PRIVATE" | "PUBLIC">("PUBLIC");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +58,10 @@ export function ShareDialog({
 
       const share = await sharesApi.create(dto);
       setCreatedShare(share);
+      addToast(
+        accessType === "PUBLIC" ? "Public link created" : "Shared successfully",
+        "success",
+      );
     } catch (err: any) {
       const apiErr = err as { code?: string; message?: string };
       if (apiErr.code === "SHARE_RECIPIENT_NOT_FOUND") {

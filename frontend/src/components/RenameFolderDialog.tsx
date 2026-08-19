@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Folder } from "../api/folders";
+import { useToast } from "../hooks/useToast";
 
 interface RenameFolderDialogProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function RenameFolderDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -48,6 +50,7 @@ export function RenameFolderDialog({
     setIsSubmitting(true);
     try {
       await onSubmit(trimmed);
+      addToast("Folder renamed successfully", "success");
       onClose();
     } catch (err: any) {
       const apiErr = err as { code?: string; message?: string };

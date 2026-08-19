@@ -48,17 +48,20 @@ export function FolderActionsMenu({
     };
   }, [isOpen]);
 
-  const handleRename = () => {
+  const handleRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsOpen(false);
     onRename();
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsOpen(false);
     onDelete();
   };
 
-  const handleShare = () => {
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsOpen(false);
     onShare?.();
   };

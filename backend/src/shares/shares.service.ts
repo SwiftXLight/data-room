@@ -449,6 +449,58 @@ export class SharesService {
     }));
   }
 
+  async listRoomShares(userId: string): Promise<ShareResponse[]> {
+    const ownedRooms = await this.prisma.dataRoom.findMany({
+      where: { ownerId: userId },
+      select: { id: true },
+    });
+
+    if (ownedRooms.length === 0) {
+      return [];
+    }
+
+    const roomIds = ownedRooms.map((r) => r.id);
+
+    const shares = await this.prisma.share.findMany({
+      where: {
+        resourceType: "DATA_ROOM",
+        resourceId: { in: roomIds },
+        revokedAt: null,
+      },
+      select: {
+        id: true,
+        resourceType: true,
+        resourceId: true,
+        accessType: true,
+        role: true,
+        publicUrl: true,
+        recipientUser: {
+          select: { id: true, email: true },
+        },
+        createdAt: true,
+        revokedAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const nameMap = await this.buildResourceNameMap(shares);
+
+    return shares.map((share) => ({
+      id: share.id,
+      resourceType: share.resourceType,
+      resourceId: share.resourceId,
+      resourceName: nameMap.get(`${share.resourceType}:${share.resourceId}`) || "",
+      accessType: share.accessType,
+      role: share.role,
+      publicUrl: share.publicUrl ?? undefined,
+      recipient: share.recipientUser
+        ? { id: share.recipientUser.id, email: share.recipientUser.email }
+        : undefined,
+      createdAt: share.createdAt.toISOString(),
+      revokedAt: share.revokedAt?.toISOString() ?? null,
+    }));
+  }
+
   async revokeShare(userId: string, shareId: string): Promise<void> {
     const share = await this.prisma.share.findUnique({
       where: { id: shareId },

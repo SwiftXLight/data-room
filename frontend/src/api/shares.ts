@@ -141,6 +141,9 @@ export const sharesApi = {
   listForRoom: (roomId: string): Promise<Share[]> =>
     api.get<Share[]>(`/shares/room/${roomId}`),
 
+  listRoomShares: (): Promise<Share[]> =>
+    api.get<Share[]>("/shares/rooms"),
+
   sharedWithMe: (): Promise<SharedWithMeResponse> =>
     api.get<SharedWithMeResponse>("/shares/with-me"),
 

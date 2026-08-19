@@ -42,6 +42,11 @@ export class SharesController {
     return this.sharesService.getSharedWithMe(req.user.id);
   }
 
+  @Get("rooms")
+  async listRoomShares(@Request() req: any) {
+    return this.sharesService.listRoomShares(req.user.id);
+  }
+
   @Delete(":shareId")
   async revoke(@Request() req: any, @Param("shareId") shareId: string) {
     await this.sharesService.revokeShare(req.user.id, shareId);

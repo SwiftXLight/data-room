@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy, Check, UserPlus, Link as LinkIcon, Trash2, Loader2 } from "lucide-react";
 import { Share } from "../api/shares";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface SharesListProps {
   shares: Share[];
@@ -11,9 +12,11 @@ interface SharesListProps {
 export function SharesList({ shares, onRevoke, canRevoke }: SharesListProps) {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const handleRevoke = async (shareId: string) => {
     setRevokingId(shareId);
+    setConfirmRevokeId(null);
     try {
       await onRevoke(shareId);
     } catch (err) {
@@ -114,7 +117,7 @@ export function SharesList({ shares, onRevoke, canRevoke }: SharesListProps) {
 
           {canRevoke && (
             <button
-              onClick={() => handleRevoke(share.id)}
+              onClick={() => setConfirmRevokeId(share.id)}
               disabled={revokingId === share.id || !!share.revokedAt}
               className="rounded-lg p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50 shrink-0 ml-3"
               title={share.revokedAt ? "Already revoked" : "Revoke access"}
@@ -126,8 +129,19 @@ export function SharesList({ shares, onRevoke, canRevoke }: SharesListProps) {
               )}
             </button>
           )}
+
+          <ConfirmDialog
+            isOpen={confirmRevokeId === share.id}
+            onClose={() => setConfirmRevokeId(null)}
+            onConfirm={() => handleRevoke(share.id)}
+            title="Revoke access"
+            description={`Are you sure you want to revoke access for this share? The recipient will no longer be able to access this ${share.resourceType.toLowerCase()}.`}
+            confirmText="Revoke"
+            variant="danger"
+          />
         </div>
       ))}
     </div>
   );
 }
+

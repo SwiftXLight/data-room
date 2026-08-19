@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { Upload, X, FileText, AlertCircle, Check, Loader2 } from "lucide-react";
 import { filesApi, UploadUrlRequest } from "../api/files";
 import { ApiError } from "../api/client";
+import { useToast } from "../hooks/useToast";
 
 interface UploadingFile {
   id: string;
@@ -29,6 +30,7 @@ export function FileUploadZone({
   folderId,
   onUploadComplete,
 }: FileUploadZoneProps) {
+  const { addToast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<UploadingFile[]>([]);
   const [conflictedFiles, setConflictedFiles] = useState<ConflictedFile[]>([]);
@@ -101,6 +103,7 @@ export function FileUploadZone({
           prev.map((f) => (f.id === tempId ? { ...f, status: "ready" } : f)),
         );
 
+        addToast(`"${file.name}" uploaded successfully`, "success");
         onUploadComplete?.();
       } catch (err) {
         const apiErr = err as ApiError;
@@ -126,6 +129,7 @@ export function FileUploadZone({
           };
           setConflictedFiles((prev) => [...prev, conflicted]);
         } else {
+          addToast(apiErr.message || "Upload failed.", "error");
           setQueue((prev) =>
             prev.map((f) =>
               f.id === tempId
@@ -274,9 +278,11 @@ export function FileUploadZone({
         ),
       );
 
+      addToast(`"${conflicted.file.name}" uploaded successfully`, "success");
       onUploadComplete?.();
     } catch (err) {
       const apiErr = err as ApiError;
+      addToast(apiErr.message || "Upload failed.", "error");
       setQueue((prev) =>
         prev.map((f) =>
           f.id === conflicted.tempId
