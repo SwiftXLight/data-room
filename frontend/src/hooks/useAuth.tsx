@@ -36,11 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authApi
       .me()
       .then((u) => setUser(u))
-      .catch((err) => {
-        const code = err?.code;
-        if (code === "AUTH_TOKEN_INVALID" || code === "AUTH_TOKEN_EXPIRED") {
-          localStorage.removeItem(TOKEN_KEY);
-        }
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
       })
       .finally(() => setIsLoading(false));
   }, []);
